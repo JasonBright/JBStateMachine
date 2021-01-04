@@ -76,7 +76,8 @@ namespace JBStateMachine
             }
 
             TState oldState = currentState;
-            TState newState = currentStateRepresentation.GetTransitionState(trigger);
+            var newTransitionState = currentStateRepresentation.GetTransitionState(trigger);
+            TState newState = newTransitionState.State;
             IStateRepresentation<TState, TTrigger> oldStateRepresentation = GetStateRepresentation(oldState);
             IStateRepresentation<TState, TTrigger> newStateRepresentation = GetStateRepresentation(newState);
 

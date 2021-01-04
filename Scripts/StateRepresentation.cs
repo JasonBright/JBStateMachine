@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace JBStateMachine
 {
@@ -12,7 +13,8 @@ namespace JBStateMachine
         // go next, not from where the state was reached.
 
         // These transitions belong to this state only, not to the super states.
-        private readonly IDictionary<TTrigger, TState> _ownTransitions = new Dictionary<TTrigger, TState>();
+
+        private readonly IDictionary<TTrigger, List< TransitionState<TState> > > _ownTransitions = new Dictionary<TTrigger, List< TransitionState<TState>>>();
         private bool _isActive;
         private readonly IList<Action> _entryActions = new List<Action>();
         private readonly IList<Action> _exitActions = new List<Action>();
@@ -28,11 +30,12 @@ namespace JBStateMachine
 
         // These are all the transitions i.e.
         // inherited (from super states) + own transitions.
-        public IDictionary<TTrigger, TState> transitions
+        public IDictionary<TTrigger, List< TransitionState<TState> > > transitions
         {
             get
             {
-                IDictionary<TTrigger, TState> allTransitions = new Dictionary<TTrigger, TState>();
+                return _ownTransitions;
+                /*IDictionary<TTrigger, TState> allTransitions = new Dictionary<TTrigger, TState>();
 
                 if (superState != null)
                 {
@@ -47,7 +50,7 @@ namespace JBStateMachine
                     }
                 }
 
-                foreach (KeyValuePair<TTrigger, TState> item in _ownTransitions)
+                foreach (KeyValuePair<TTrigger, TransitionState> item in _ownTransitions)
                 {
                     if (allTransitions.ContainsKey(item.Key))
                     {
@@ -57,7 +60,7 @@ namespace JBStateMachine
                     allTransitions.Add(item);
                 }
 
-                return allTransitions;
+                return allTransitions;*/
             }
         }
 
@@ -80,24 +83,38 @@ namespace JBStateMachine
             return transitions.ContainsKey(trigger);
         }
 
-        public void AddTransition(TTrigger trigger, TState state)
+        public void AddTransition(TTrigger trigger, TState state, Func<bool> condition)
         {
-            if (_ownTransitions.ContainsKey(trigger))
+            /*if (_ownTransitions.ContainsKey(trigger))
             {
                 throw new InvalidOperationException("The trigger '" + trigger + "' is already present in one of the transitions of the state '" + state + "'.");
+            }*/
+            if (_ownTransitions.ContainsKey(trigger) == false)
+            {
+                _ownTransitions.Add(trigger, new List<TransitionState<TState>>());
             }
 
-            _ownTransitions.Add(trigger, state);
+            _ownTransitions[ trigger ].Add(new TransitionState<TState>(state, condition));
         }
 
-        public TState GetTransitionState(TTrigger trigger)
+        public TransitionState<TState> GetTransitionState(TTrigger trigger)
         {
             if (!transitions.ContainsKey(trigger))
             {
                 throw new KeyNotFoundException("No transition present for trigger " + trigger);
             }
 
-            return transitions[trigger];
+            var availableTransitions = transitions[ trigger ];
+            foreach (var availableTransition in availableTransitions)
+            {
+                if (availableTransition.Condition == null)
+                    return availableTransition;
+                
+                if (availableTransition.Condition.Invoke())
+                    return availableTransition;
+            }
+
+            return null;
         }
 
         public void OnEnter(ITransition<TState, TTrigger> transition)
