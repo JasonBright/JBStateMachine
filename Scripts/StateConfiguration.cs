@@ -25,17 +25,13 @@ namespace JBStateMachine
 
         public IStateConfiguration<TState, TTrigger> Permit(TTrigger trigger, TState state)
         {
-            stateRepresentation.AddTransition(trigger, state);
+            stateRepresentation.AddTransition(trigger, state, null);
             return this;
         }
 
         public IStateConfiguration<TState, TTrigger> PermitIf(TTrigger trigger, TState state, Func<bool> guard)
         {
-            if (guard() == true)
-            {
-                Permit(trigger, state);
-            }
-
+            stateRepresentation.AddTransition(trigger, state, guard);
             return this;
         }
 
