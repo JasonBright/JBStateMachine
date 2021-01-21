@@ -72,7 +72,9 @@ namespace JBStateMachine
         {
             if (!permittedTriggers.Contains(trigger))
             {
-                throw new NotSupportedException("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
+                //throw new NotSupportedException("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
+                Debug.Log("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
+                return;
             }
 
             TState oldState = currentState;
