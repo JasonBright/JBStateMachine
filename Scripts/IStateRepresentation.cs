@@ -5,8 +5,6 @@ namespace JBStateMachine
 {
     public interface IStateRepresentation<TState, TTrigger>
     {
-        
-        
         TState state { get; }
         IStateRepresentation<TState, TTrigger> superState { get; set; }
         IDictionary<TTrigger, List< TransitionState<TState>>> transitions { get; }

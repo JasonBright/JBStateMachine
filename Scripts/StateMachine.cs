@@ -18,11 +18,18 @@ namespace JBStateMachine
         {
             get
             {
+                var result = currentStateRepresentation.permittedTriggers;
                 if (anyState != null)
                 {
-                    return currentStateRepresentation.permittedTriggers.Union(anyState.permittedTriggers).ToList();
+                    result = result.Union(anyState.permittedTriggers).ToList();
                 }
-                return currentStateRepresentation.permittedTriggers;
+
+                var superState = currentStateRepresentation.superState;
+                if (superState != null)
+                {
+                    result = result.Union(superState.permittedTriggers).ToList();
+                }
+                return result;
             }
         }
 
@@ -100,10 +107,18 @@ namespace JBStateMachine
             }
             catch
             {
-                //nothing
-                //трай кетч в этой конструкции нужен на тот случай, если прилетает триггер из AnyState.
-                //соответственно этого транзишина внутри текущего стейта нет и он выбросит эксепшен.
-                
+                if (currentStateRepresentation.superState != null)
+                {
+                    try
+                    {
+                        newTransitionState = currentStateRepresentation.superState.GetTransitionState(trigger);
+                    }
+                    catch
+                    {
+                        //nothing
+                    }
+                }
+
                 //попытка взять транзишин из AnyState. 
                 //Её имеет смысл держать здесь, поскольку AnyState имеет приоритет ниже, чем переход стейта
                 //и используется только если в стейте нет указанного триггера
@@ -136,7 +151,8 @@ namespace JBStateMachine
 
         public bool IsInState(TState state)
         {
-            return currentState.Equals(state);
+            var currentStateRepresentation = GetStateRepresentation(currentState);
+            return currentState.Equals(state) || (currentStateRepresentation.superState != null && currentStateRepresentation.superState.state.Equals(state));
         }
 
         public bool CanFire(TTrigger trigger)
