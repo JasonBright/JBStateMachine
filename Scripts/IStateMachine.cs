@@ -17,6 +17,8 @@ namespace JBStateMachine
         /// configured.</returns>
         IStateConfiguration<TState, TTrigger> Configure(TState state, IStateController controller);
 
+        void SetAnyState(IStateRepresentation<TState, TTrigger> stateRepresentation);
+
         /// <summary>
         /// Transition from the current state via the specified trigger.
         /// The target state is determined by the configuration of the current

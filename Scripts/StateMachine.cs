@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace JBStateMachine
@@ -17,6 +18,10 @@ namespace JBStateMachine
         {
             get
             {
+                if (anyState != null)
+                {
+                    return currentStateRepresentation.permittedTriggers.Union(anyState.permittedTriggers).ToList();
+                }
                 return currentStateRepresentation.permittedTriggers;
             }
         }
@@ -29,6 +34,7 @@ namespace JBStateMachine
             }
         }
 
+        private IStateRepresentation<TState, TTrigger> anyState;
         public StateMachine(TState initialState)
         {
             currentState = initialState;
@@ -46,6 +52,15 @@ namespace JBStateMachine
                 _stateConfigurations.Add(state, configuration);
                 return configuration;
             }
+        }
+
+        public void SetAnyState(IStateRepresentation<TState, TTrigger> stateRepresentation)
+        {
+            if (anyState != null)
+            {
+                throw new Exception($"AnyState already set: {anyState.state}");
+            }
+            anyState = stateRepresentation;
         }
 
         public void Fire(TTrigger trigger)
@@ -76,12 +91,33 @@ namespace JBStateMachine
                 Debug.Log("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
                 return;
             }
-
-            TState oldState = currentState;
-            var newTransitionState = currentStateRepresentation.GetTransitionState(trigger);
-            if (newTransitionState == null)
-                return;
             
+            TState oldState = currentState;
+            TransitionState<TState> newTransitionState = null;
+            try
+            { 
+                newTransitionState = currentStateRepresentation.GetTransitionState(trigger);
+            }
+            catch
+            {
+                //nothing
+                //трай кетч в этой конструкции нужен на тот случай, если прилетает триггер из AnyState.
+                //соответственно этого транзишина внутри текущего стейта нет и он выбросит эксепшен.
+                
+                //попытка взять транзишин из AnyState. 
+                //Её имеет смысл держать здесь, поскольку AnyState имеет приоритет ниже, чем переход стейта
+                //и используется только если в стейте нет указанного триггера
+                if (newTransitionState == null && anyState != null)
+                {
+                    newTransitionState = anyState.GetTransitionState(trigger);
+                }
+            }
+
+            if (newTransitionState == null)
+            {
+                return;
+            }
+
             TState newState = newTransitionState.State;
             IStateRepresentation<TState, TTrigger> oldStateRepresentation = GetStateRepresentation(oldState);
             IStateRepresentation<TState, TTrigger> newStateRepresentation = GetStateRepresentation(newState);

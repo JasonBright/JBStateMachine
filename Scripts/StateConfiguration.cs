@@ -41,6 +41,12 @@ namespace JBStateMachine
             return this;
         }
 
+        public IStateConfiguration<TState, TTrigger> SetAsAnyState()
+        {
+            machine.SetAnyState(stateRepresentation);
+            return this;
+        }
+
         public IStateConfiguration<TState, TTrigger> PermitReentryIf(TTrigger trigger, Func<bool> guard)
         {
             if (guard() == true)
