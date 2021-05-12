@@ -56,6 +56,8 @@ namespace JBStateMachine
         /// </remarks>
         IStateConfiguration<TState, TTrigger> PermitReentry(TTrigger trigger);
 
+        IStateConfiguration<TState, TTrigger> SetAsAnyState();
+
         /// <summary>
         /// Accept the specified trigger, execute exit actions and
         /// re-execute entry actions.

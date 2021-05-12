@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace JBStateMachine
@@ -17,7 +18,18 @@ namespace JBStateMachine
         {
             get
             {
-                return currentStateRepresentation.permittedTriggers;
+                var result = currentStateRepresentation.permittedTriggers;
+                if (anyState != null)
+                {
+                    result = result.Union(anyState.permittedTriggers).ToList();
+                }
+
+                var superState = currentStateRepresentation.superState;
+                if (superState != null)
+                {
+                    result = result.Union(superState.permittedTriggers).ToList();
+                }
+                return result;
             }
         }
 
@@ -29,6 +41,7 @@ namespace JBStateMachine
             }
         }
 
+        private IStateRepresentation<TState, TTrigger> anyState;
         public StateMachine(TState initialState)
         {
             currentState = initialState;
@@ -46,6 +59,15 @@ namespace JBStateMachine
                 _stateConfigurations.Add(state, configuration);
                 return configuration;
             }
+        }
+
+        public void SetAnyState(IStateRepresentation<TState, TTrigger> stateRepresentation)
+        {
+            if (anyState != null)
+            {
+                throw new Exception($"AnyState already set: {anyState.state}");
+            }
+            anyState = stateRepresentation;
         }
 
         public void Fire(TTrigger trigger)
@@ -76,12 +98,41 @@ namespace JBStateMachine
                 Debug.Log("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
                 return;
             }
-
-            TState oldState = currentState;
-            var newTransitionState = currentStateRepresentation.GetTransitionState(trigger);
-            if (newTransitionState == null)
-                return;
             
+            TState oldState = currentState;
+            TransitionState<TState> newTransitionState = null;
+            try
+            { 
+                newTransitionState = currentStateRepresentation.GetTransitionState(trigger);
+            }
+            catch
+            {
+                if (currentStateRepresentation.superState != null)
+                {
+                    try
+                    {
+                        newTransitionState = currentStateRepresentation.superState.GetTransitionState(trigger);
+                    }
+                    catch
+                    {
+                        //nothing
+                    }
+                }
+
+                //попытка взять транзишин из AnyState. 
+                //Её имеет смысл держать здесь, поскольку AnyState имеет приоритет ниже, чем переход стейта
+                //и используется только если в стейте нет указанного триггера
+                if (newTransitionState == null && anyState != null)
+                {
+                    newTransitionState = anyState.GetTransitionState(trigger);
+                }
+            }
+
+            if (newTransitionState == null)
+            {
+                return;
+            }
+
             TState newState = newTransitionState.State;
             IStateRepresentation<TState, TTrigger> oldStateRepresentation = GetStateRepresentation(oldState);
             IStateRepresentation<TState, TTrigger> newStateRepresentation = GetStateRepresentation(newState);
@@ -100,7 +151,8 @@ namespace JBStateMachine
 
         public bool IsInState(TState state)
         {
-            return currentState.Equals(state);
+            var currentStateRepresentation = GetStateRepresentation(currentState);
+            return currentState.Equals(state) || (currentStateRepresentation.superState != null && currentStateRepresentation.superState.state.Equals(state));
         }
 
         public bool CanFire(TTrigger trigger)

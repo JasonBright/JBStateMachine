@@ -41,6 +41,12 @@ namespace JBStateMachine
             return this;
         }
 
+        public IStateConfiguration<TState, TTrigger> SetAsAnyState()
+        {
+            machine.SetAnyState(stateRepresentation);
+            return this;
+        }
+
         public IStateConfiguration<TState, TTrigger> PermitReentryIf(TTrigger trigger, Func<bool> guard)
         {
             if (guard() == true)
@@ -102,7 +108,14 @@ namespace JBStateMachine
                 throw new ArgumentException("Configuring " + state + " as a substate of " + superState + " creates an illegal cyclic configuration.");
             }
 
-            stateRepresentation.superState = machine.GetStateRepresentation(superState);
+            var superStateRepresentation = machine.GetStateRepresentation(superState);
+            if (superStateRepresentation.superState != null)
+            {
+                throw new Exception(
+                    "Only single-tier adoption supported. Are you sure that you really need it? Maybe better to make another one state machine");
+            }
+            
+            stateRepresentation.superState = superStateRepresentation;
             return this;
         }
     }
