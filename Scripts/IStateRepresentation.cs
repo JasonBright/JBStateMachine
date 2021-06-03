@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace JBStateMachine
+namespace JasonBright.StateMachine
 {
     public interface IStateRepresentation<TState, TTrigger>
     {

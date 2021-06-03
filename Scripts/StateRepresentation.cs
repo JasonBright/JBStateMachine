@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JBStateMachine
+namespace JasonBright.StateMachine
 {
     public delegate EnterDataBase StateDataDelegate<in T>(T transition);
     
