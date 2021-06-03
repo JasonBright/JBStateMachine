@@ -1,0 +1,10 @@
+{
+	"name": "com.jasonbright.statemachine",
+	"displayName": "JB State Machine",
+	"version": "1.0.0",
+	"unity": "2020.3",
+	"author": "Jason Bright",
+	"description": "This is my state machine for unity",
+	"dependencies": {
+	}
+}
