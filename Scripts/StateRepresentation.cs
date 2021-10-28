@@ -143,13 +143,13 @@ namespace JasonBright.StateMachine
             _isActive = true;
         }
 
-        public void OnExit(ITransition<TState, TTrigger> transition)
+        public void OnExit(ITransition<TState, TTrigger> transition, bool forced = false)
         {
             // 1. If this state is inactive then we are not inside this state or
             // any of its sub-states.
             // 2. Don't call exit actions if this state or any of its sub-states
             // are the destination state.
-            if (!_isActive || Includes(transition.destination))
+            if (forced == false && (  !_isActive || Includes(transition.destination) )) //todo: рефакторнуть бы эту дичь
             {
                 return;
             }

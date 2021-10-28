@@ -7,10 +7,10 @@ namespace JasonBright.StateMachine
 {
     public partial class StateMachine<TState, TTrigger> : IStateMachine<TState, TTrigger>
     {
-        private IDictionary<TState, IStateConfiguration<TState, TTrigger>> _stateConfigurations = new Dictionary<TState, IStateConfiguration<TState, TTrigger>>();
+        private readonly IDictionary<TState, IStateConfiguration<TState, TTrigger>> _stateConfigurations = new Dictionary<TState, IStateConfiguration<TState, TTrigger>>();
         private Action _onTransition;
         
-        private readonly Queue<TTrigger> fireQueue = new Queue<TTrigger>();
+        private readonly Queue<TTrigger> fireQueue = new();
 
         public TState currentState { get; private set; }
 
@@ -42,9 +42,16 @@ namespace JasonBright.StateMachine
         }
 
         private IStateRepresentation<TState, TTrigger> anyState;
+        
+        [Obsolete("Инициализация стартового состояния устарела и не используется. Осталось только для совместимости. Использовать Start")]
         public StateMachine(TState initialState)
         {
-            currentState = initialState;
+            
+        }
+
+        public StateMachine()
+        {
+            
         }
 
         public IStateConfiguration<TState, TTrigger> Configure(TState state, IStateController controller)
@@ -59,6 +66,16 @@ namespace JasonBright.StateMachine
                 _stateConfigurations.Add(state, configuration);
                 return configuration;
             }
+        }
+
+        public void Start(TState initState)
+        {
+            IStateRepresentation<TState, TTrigger> newStateRepresentation = GetStateRepresentation(initState);
+
+            ITransition<TState, TTrigger> transition = new Transition<TState, TTrigger>(initState, initState, default);
+            currentState = initState;
+            Debug.Log("State Machine Started " + currentState);
+            newStateRepresentation.OnEnter(transition);
         }
 
         public void SetAnyState(IStateRepresentation<TState, TTrigger> stateRepresentation)
@@ -134,6 +151,11 @@ namespace JasonBright.StateMachine
             }
 
             TState newState = newTransitionState.State;
+            ChangeState(oldState, newState, trigger);
+        }
+
+        private void ChangeState(TState oldState, TState newState, TTrigger trigger)
+        {
             IStateRepresentation<TState, TTrigger> oldStateRepresentation = GetStateRepresentation(oldState);
             IStateRepresentation<TState, TTrigger> newStateRepresentation = GetStateRepresentation(newState);
 
@@ -190,6 +212,14 @@ namespace JasonBright.StateMachine
             }
 
             return _stateConfigurations[state].stateRepresentation;
+        }
+
+        public void Dispose()
+        {
+            IStateRepresentation<TState, TTrigger> oldStateRepresentation = GetStateRepresentation(currentState);
+            
+            ITransition<TState, TTrigger> transition = new Transition<TState, TTrigger>(currentState, currentState, default);
+            oldStateRepresentation.OnExit(transition, true);
         }
     }
 }
