@@ -12,6 +12,8 @@ namespace JasonBright.StateMachine
         
         private readonly Queue<TTrigger> fireQueue = new();
 
+        private string name;
+
         public TState currentState { get; private set; }
 
         public ICollection<TTrigger> permittedTriggers
@@ -49,9 +51,9 @@ namespace JasonBright.StateMachine
             
         }
 
-        public StateMachine()
+        public StateMachine(string name = "")
         {
-            
+            this.name = name;
         }
 
         public IStateConfiguration<TState, TTrigger> Configure(TState state, IStateController controller)
@@ -74,7 +76,7 @@ namespace JasonBright.StateMachine
 
             ITransition<TState, TTrigger> transition = new Transition<TState, TTrigger>(initState, initState, default);
             currentState = initState;
-            Debug.Log("State Machine Started " + currentState);
+            Debug.Log($"State Machine ({name} Started {currentState}");
             newStateRepresentation.OnEnter(transition);
         }
 
@@ -112,7 +114,7 @@ namespace JasonBright.StateMachine
             if (!permittedTriggers.Contains(trigger))
             {
                 //throw new NotSupportedException("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
-                Debug.Log("'" + trigger + "' trigger is not configured for '" + currentState + "' state.");
+                Debug.Log(name + " '" + trigger + "' trigger is not configured for '" + currentState + "' state.");
                 return;
             }
             
@@ -168,7 +170,7 @@ namespace JasonBright.StateMachine
             oldStateRepresentation.OnExit(transition);
             newStateRepresentation.OnEnter(transition);
             currentState = newState;
-            Debug.Log("CURRENT STATE " + currentState);
+            Debug.Log($"SM {name}; CURRENT STATE {currentState}");
         }
 
         public bool IsInState(TState state)
@@ -201,7 +203,7 @@ namespace JasonBright.StateMachine
                 triggers += trigger + ", ";
             }
 
-            return ("Current state: " + currentState + " | Permitted triggers: " + triggers);
+            return (name + " Current state: " + currentState + " | Permitted triggers: " + triggers);
         }
 
         public IStateRepresentation<TState, TTrigger> GetStateRepresentation(TState state)
