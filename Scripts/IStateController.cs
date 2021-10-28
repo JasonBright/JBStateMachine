@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JBStateMachine
+namespace JasonBright.StateMachine
 {
     public interface IStateController
     {

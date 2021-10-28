@@ -1,6 +1,6 @@
 using System;
 
-namespace JBStateMachine
+namespace JasonBright.StateMachine
 {
     public interface IStateConfiguration<TState, TTrigger>
     {

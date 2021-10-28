@@ -1,4 +1,4 @@
-namespace JBStateMachine
+namespace JasonBright.StateMachine
 {
     public class Transition<TState, TTrigger> : ITransition<TState, TTrigger>
     {

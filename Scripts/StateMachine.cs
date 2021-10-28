@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace JBStateMachine
+namespace JasonBright.StateMachine
 {
     public partial class StateMachine<TState, TTrigger> : IStateMachine<TState, TTrigger>
     {
