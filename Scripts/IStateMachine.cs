@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace JasonBright.StateMachine
 {
-    public interface IStateMachine<TState, TTrigger>
+    public interface IStateMachine<TState, TTrigger> : IDisposable
     {
         TState currentState { get; }
         ICollection<TTrigger> permittedTriggers { get; }
@@ -16,6 +16,8 @@ namespace JasonBright.StateMachine
         /// <returns>A configuration object through which the state can be
         /// configured.</returns>
         IStateConfiguration<TState, TTrigger> Configure(TState state, IStateController controller);
+
+        void Start(TState initState);
 
         void SetAnyState(IStateRepresentation<TState, TTrigger> stateRepresentation);
 

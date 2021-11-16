@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using UnityDependencyInjection;
 using UnityEngine;
 
 namespace JasonBright.StateMachine
@@ -27,6 +29,8 @@ namespace JasonBright.StateMachine
         public TState state { get; private set; }
         public IStateRepresentation<TState, TTrigger> superState { get; set; }
         public IStateController Controller { get; private set; }
+
+        private CancellationTokenSource exitStateCancellation;
 
         // These are all the transitions i.e.
         // inherited (from super states) + own transitions.
@@ -139,17 +143,19 @@ namespace JasonBright.StateMachine
             var data = entryDataAction?.Invoke(transition);
             transition.enterDataBase = data;
 
+            exitStateCancellation = new CancellationTokenSource();
+            InjectToController();
             Controller?.OnEntered(data);
             _isActive = true;
         }
 
-        public void OnExit(ITransition<TState, TTrigger> transition)
+        public void OnExit(ITransition<TState, TTrigger> transition, bool forced = false)
         {
             // 1. If this state is inactive then we are not inside this state or
             // any of its sub-states.
             // 2. Don't call exit actions if this state or any of its sub-states
             // are the destination state.
-            if (!_isActive || Includes(transition.destination))
+            if (forced == false && (  !_isActive || Includes(transition.destination) )) //todo: рефакторнуть бы эту дичь
             {
                 return;
             }
@@ -161,6 +167,13 @@ namespace JasonBright.StateMachine
             }
             
             _isActive = false;
+            if (exitStateCancellation != null)
+            {
+                exitStateCancellation.Cancel();
+                exitStateCancellation.Dispose();
+                exitStateCancellation = null;
+            }
+
             var data = Controller?.OnExited();
             transition.ExitData = data;
             
@@ -172,6 +185,42 @@ namespace JasonBright.StateMachine
                 superState.OnExit(transition);
             }
         }
+
+        private void InjectToController()
+        {
+            if (Controller == null)
+                return;
+            
+            InjectTo(Controller);
+        }
+        
+        // ------------ TEMP ---------------
+        private void InjectTo(object targetObject)
+        {
+            var targetObjectType = targetObject.GetType();
+            var injectableFields = DependencyContainer.GetInjectableFields(targetObjectType);
+
+            foreach (var field in injectableFields)
+            {
+                var dependency = GetDependency(field.FieldType);
+                if (dependency == null)
+                {
+                    Debug.LogWarning(
+                        $"Unmet dependency for {targetObjectType.Name}.{field.Name} ({field.FieldType})");
+                }
+
+                field.SetValue(targetObject, dependency);
+            }
+
+            var handler = targetObject as IDependencyInjectionCompleteHandler;
+            handler?.HandleDependencyInjectionComplete();
+        }
+
+        private object GetDependency(Type fieldFieldType)
+        {
+            return exitStateCancellation.Token;
+        }
+        // ----------- TEMP END --------------
 
         public void AddEntryAction(Action action)
         {

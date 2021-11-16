@@ -16,7 +16,7 @@ namespace JasonBright.StateMachine
         void AddTransition(TTrigger trigger, TState state, Func<bool> condition);
         TransitionState<TState> GetTransitionState(TTrigger trigger);
         void OnEnter(ITransition<TState, TTrigger> transition);
-        void OnExit(ITransition<TState, TTrigger> transition);
+        void OnExit(ITransition<TState, TTrigger> transition, bool forced = false);
         void AddEntryAction(Action action);
         void AddExitAction(Action action);
         void SetEntryStateData(StateDataDelegate<ITransition<TState, TTrigger>> action);
