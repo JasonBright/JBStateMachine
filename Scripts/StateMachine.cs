@@ -10,7 +10,7 @@ namespace JasonBright.StateMachine
         private readonly IDictionary<TState, IStateConfiguration<TState, TTrigger>> _stateConfigurations = new Dictionary<TState, IStateConfiguration<TState, TTrigger>>();
         private Action _onTransition;
         
-        private readonly Queue<TTrigger> fireQueue = new();
+        private readonly Queue<TTrigger> fireQueue = new Queue<TTrigger>();
 
         private string name;
 
