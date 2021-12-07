@@ -140,12 +140,13 @@ namespace JasonBright.StateMachine
                 action();
             }
             
-            var data = entryDataAction?.Invoke(transition);
-            transition.enterDataBase = data;
-
             exitStateCancellation = new CancellationTokenSource();
             InjectToController();
             _isActive = true;
+            
+            var data = entryDataAction?.Invoke(transition);
+            transition.enterDataBase = data;
+
             Controller?.OnEntered(data);
             
         }
