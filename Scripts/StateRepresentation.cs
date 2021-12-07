@@ -135,6 +135,8 @@ namespace JasonBright.StateMachine
                 return;
             }
             
+            _isActive = true;
+            
             foreach (Action action in _entryActions)
             {
                 action();
@@ -142,7 +144,6 @@ namespace JasonBright.StateMachine
             
             exitStateCancellation = new CancellationTokenSource();
             InjectToController();
-            _isActive = true;
             
             var data = entryDataAction?.Invoke(transition);
             transition.enterDataBase = data;
