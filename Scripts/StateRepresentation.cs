@@ -145,8 +145,9 @@ namespace JasonBright.StateMachine
 
             exitStateCancellation = new CancellationTokenSource();
             InjectToController();
-            Controller?.OnEntered(data);
             _isActive = true;
+            Controller?.OnEntered(data);
+            
         }
 
         public void OnExit(ITransition<TState, TTrigger> transition, bool forced = false)
